@@ -480,3 +480,153 @@ if left and right pass up a node, return cur, else return left or right
 
 
 """
+
+def firstCommonAncestor(root, nodeA, nodeB):
+	def helper(cur, nodeA, nodeB):
+		if cur is None:
+			return None, False
+		left = helper(cur.left, nodeA, nodeB)
+		right = helper(cur.right, nodeA, nodeB)
+
+		# found ancestor already
+		if left[1] or right[1]:
+			if left[1]:
+				return left
+			else:
+				return right
+
+		# cur is ancestor
+		if (left[0] is nodeA and right[0] is nodeB) or \
+		(left[0] is nodeB and right[0] is nodeA) or \
+		(cur is nodeA and (left[0] is nodeB or right[0] is nodeB)) or \
+		(cur is nodeB and (left[0] is nodeA or right[0] is nodeA)):
+			return cur, True
+
+		# cur is nodeA or nodeB and not an ancestor
+		if cur is nodeA or cur is nodeB:
+			return cur, False
+
+		# one node found in left subtree
+		if left[0] is nodeA or left[0] is nodeB:
+			return left, False
+
+		# one node found in right subtree
+		if right[0] is nodeA or right[0] is nodeB:
+			return right, False
+
+		return None, False
+
+	ans = helper(root, nodeA, nodeB)
+	if ans[1]:
+		return ans[0]
+	else:
+		return None
+
+# simple case
+def firstCommonAncestorTest():
+	nodeA = TreeNode(4)
+	nodeB = TreeNode(5)
+	root = TreeNode(1, TreeNode(2, nodeA, nodeB), TreeNode(3))
+
+	clear()
+	print(firstCommonAncestor(root, nodeA, nodeB).val)
+
+# one is an ancestor of the other
+def firstCommonAncestorTest2():
+	nodeB = TreeNode(5)
+	nodeA = TreeNode(4, nodeB, None)
+	root = TreeNode(1, TreeNode(2), TreeNode(3, nodeA, nodeB))
+
+	clear()
+	print(firstCommonAncestor(root, nodeA, nodeB).val)
+
+# no common ancestor
+def firstCommonAncestorTest3():
+	nodeB = TreeNode(5)
+	nodeA = TreeNode(4)
+	root = TreeNode(1, TreeNode(2, nodeA, None), TreeNode(3))
+
+	clear()
+	print(firstCommonAncestor(root, nodeA, nodeB))
+
+# none
+def firstCommonAncestorTest4():
+	nodeB = None
+	nodeA = None
+	root = None
+
+	clear()
+	print(firstCommonAncestor(root, nodeA, nodeB))
+
+firstCommonAncestorTest()
+firstCommonAncestorTest2()
+firstCommonAncestorTest3()
+firstCommonAncestorTest4()
+
+"""
+4.9
+BST Sequences
+
+build sequences from bottom up
+
+Use a weave function to weave sequences as we go up
+
+return fully weaved sequences
+"""
+
+"""
+4.10 
+Check subtree
+
+check if T2 is a subtree of T1
+
+Method 1:
+Turn T1 and T2 into a String using a preorder traversal, traverse T1 string looking for T2 string
+
+runtime o(n + m)
+mem: o(n)
+
+0
+12
+1
+34
+2
+56
+
+node index = n
+left child index = 2n + 1
+right child index = 2n + 2
+
+Method 2:
+Perform a traversal of T1, if cur.val == T2 root.val, perform a tree compare. If compare is return true. Else continue traversal
+runtime o(n + n*m)
+mem: o(1)
+
+"""
+
+def checkSubtree(A, B):
+	def treeString(root):
+		if root is None:
+			return "x"
+		return str(root.val) + treeString(root.left) + treeString(root.right)
+	Astring = treeString(A)
+	Bstring = treeString(B)
+
+	return Bstring in Astring
+
+def checkSubtreeTest():
+	subTree = TreeNode(2, TreeNode(4, None), None)
+	root = TreeNode(1, subTree, TreeNode(3))
+	clear()
+
+	print(checkSubtree(root, subTree))
+
+def checkSubtreeTest2():
+	subTree = TreeNode(5)
+	root = TreeNode(1, TreeNode(2, TreeNode(4, None), None), TreeNode(3))
+	clear()
+
+	print(checkSubtree(root, subTree))
+
+checkSubtreeTest()
+checkSubtreeTest2()
