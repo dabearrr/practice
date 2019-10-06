@@ -1,5 +1,6 @@
 from collections import deque
 import math
+import random
 
 def clear():
 	print("-----------------------")
@@ -574,6 +575,52 @@ Use a weave function to weave sequences as we go up
 return fully weaved sequences
 """
 
+def bstSeq(root):
+	def weave(left, right, prefix, sequences):
+		# print(left, right, prefix, sequences)
+		if not left and not right:
+			sequences.append(prefix)
+			print(prefix)
+		if left:
+			newPrefix = prefix[:]
+			newPrefix.append(left[0])
+			weave(left[1:], right, newPrefix, sequences)
+		if right:
+			newPrefix = prefix[:]
+			newPrefix.append(right[0])
+			weave(left, right[1:], newPrefix, sequences)
+
+
+	if root is None:
+		return []
+	l = bstSeq(root.left)
+	r = bstSeq(root.right)
+	sequences = []
+
+	if not l and not r:
+		sequences.append([root.val])
+	for lSeq in l:
+		for rSeq in r:
+			weave(lSeq, rSeq, [root.val], sequences)
+
+	return sequences
+	
+# simple example
+def bstSeqTest():
+	root = TreeNode(2, TreeNode(1), TreeNode(3))
+
+	clear()
+	print(bstSeq(root))
+
+# complex example
+def bstSeqTest2():
+	root = TreeNode(4, TreeNode(2, TreeNode(1), TreeNode(3)), TreeNode(6, TreeNode(5), TreeNode(7)))
+
+	clear()
+	print(bstSeq(root))
+
+bstSeqTest()
+bstSeqTest2()
 """
 4.10 
 Check subtree
@@ -632,5 +679,37 @@ checkSubtreeTest()
 checkSubtreeTest2()
 
 """
-4.11 
+4.11  Get random node
+
+brute force approach:
+tree.size
+
+random.randint to pick 0 to tree size
+
+traverse the tree in any fashion, until we rand amount of nodes, then return that node
+O(n) runtime, O(1) memory
+
+using properties of bst
+assuming bst is balanced
+
+we can traverse starting from the root, randomly pick left or right log(n) times, return once we hit rand amount of traversals, where rand = 0 to log(n), or we hit a leaf
+This would only be truly random if the bst is balanced
+O(log(n)) time, O(1) mem
 """
+
+def getRandomNode(root, size):
+	randIndex = random.randint(0, size - 1)
+
+	queue = collections.deque()
+	queue.append(root)
+	index = 0
+	while queue:
+		cur = queue.popleft()
+		if index == randIndex:
+			return cur
+		index += 1
+		queue.append(cur.left)
+		queue.append(cur.right)
+
+	#should never be reached
+	return None
