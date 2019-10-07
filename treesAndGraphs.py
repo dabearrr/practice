@@ -695,7 +695,32 @@ assuming bst is balanced
 we can traverse starting from the root, randomly pick left or right log(n) times, return once we hit rand amount of traversals, where rand = 0 to log(n), or we hit a leaf
 This would only be truly random if the bst is balanced
 O(log(n)) time, O(1) mem
+
+actually we can ensure balancing of the tree, since we are implementing the Tree ourselves
+
 """
+
+# assume our tree class auto balances BST
+def getRandomNode(root, size):
+	# here the depths are equally likely, which is not an equal distrubution of nodes.
+	# randomDepth = random.randint(0, math.log(size - 1, 2))
+
+
+	# now each depth is not equally likely, weighed by size
+	randomDepth = math.log(random.randint(1, size), 2)
+
+	curDepth = 0
+	cur = root
+
+	while curDepth < randomDepth:
+		# randomly select direction, all nodes should be equally likely, does not work if the tree is not complete
+		# randDir = random.randint(0, 1)
+
+		# need to weigh the directions by the sizes of the subtrees
+		print("fill this later")
+
+	return cur
+
 
 def getRandomNode(root, size):
 	randIndex = random.randint(0, size - 1)
@@ -713,3 +738,77 @@ def getRandomNode(root, size):
 
 	#should never be reached
 	return None
+
+
+"""
+EPI
+Chapter 9
+
+9.1, 9.4, 9.2, 9.12, 9.11, 9.13, 9.16
+"""
+
+"""
+9.1
+
+check height subtrees
+
+if they differ by more than 1, return false
+"""
+
+def validateHeights(root):
+	def getHeight(cur):
+		if cur is None:
+			return 0
+
+		left = getHeight(cur.left)
+		right = getHeight(cur.right)
+
+		if left == float('-inf') or right == float('-inf'):
+			return float('-inf')
+
+		if abs(left - right) > 1:
+			return float('-inf')
+
+		return max(left, right) + 1
+
+	if root is None:
+		return True
+
+	left = getHeight(root.left)
+	right = getHeight(root.right)
+
+	if left == float('-inf') or right == float('-inf'):
+		return False
+
+	return abs(left - right) < 2
+
+
+def validateHeightTest():
+	root = TreeNode(1, TreeNode(2, TreeNode(4), TreeNode(5)), TreeNode(3, TreeNode(6), TreeNode(7)))
+
+	clear()
+	print("should be True ", validateHeights(root))
+
+def validateHeightTest2():
+	root = TreeNode(1, TreeNode(2, TreeNode(4), TreeNode(5)))
+
+	clear()
+	print("should be False ", validateHeights(root))
+
+def validateHeightTest3():
+	root = TreeNode(1, TreeNode(2, TreeNode(4), TreeNode(5, TreeNode(6))), TreeNode(3))
+
+	clear()
+	print("should be False ", validateHeights(root))
+
+
+validateHeightTest()
+validateHeightTest2()
+validateHeightTest3()
+
+
+"""
+9.4
+
+Lowest Common Ancestor
+"""
