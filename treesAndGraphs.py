@@ -806,9 +806,200 @@ validateHeightTest()
 validateHeightTest2()
 validateHeightTest3()
 
+"""
+9.2
+
+Symmetric Tree
+
+The right subtree is a reflection of the left subtree
+
+runtime is O(n) since we potentially read the entire tree if it is symmetric
+
+memory is O(1), we only store some pointers to traverse
+"""
+
+def symmetricTree(root):
+	if root is None:
+		return True
+	def helper(left, right):
+		if left is None and right is None:
+			return True
+		if left is None or right is None:
+			return False
+		return left.val == right.val and helper(left.left, right.right) and helper(left.right, right.left)
+	return helper(root.left, root.right)
+
+"""
+9.3
+
+Lowest Common Ancestor
+
+We can do a preorder traversal, looking for either of the two nodes in the left or right subtrees
+if one node is in the left subtree and the other node is in the right subtree, return cur
+
+Assuming that least common ancestor cannot be nodeA or nodeB
+"""
+
+def lca(root, nodeA, nodeB):
+	def helper(cur, nodeA, nodeB):
+		# base case
+		if cur is None:
+			return None, False
+		
+		# found nodeA or nodeB
+		if cur is nodeA or cur is nodeB:
+			return cur, False
+		
+		left = helper(cur.left, nodeA, nodeB)
+		right = helper(cur.right, nodeA, nodeB)
+		
+		# found ancestor already in subtree
+		if left[1]:
+			return left
+		elif right[1]:
+			return right
+		
+		# cur is ancestor
+		if (left[0] is nodeA and right[0] is nodeB) or \
+		(left[0] is nodeB and right[0] is nodeA):
+			return cur, True
+		
+		# cur is not ancestor, nodeA, or NodeB AND subtrees do not contain ancestor, nodeA, or nodeB
+		return None, False
+	
+	ans = helper(root, nodeA, nodeB)
+	
+	if ans[1]:
+		return ans[0]
+	return None
+
+def lcaTest():
+	nodeA = TreeNode(5)
+	nodeB = TreeNode(7)
+	
+	root = TreeNode(4, TreeNode(2, TreeNode(1), TreeNode(3)), TreeNode(6, nodeA, nodeB))
+	
+	clear()
+	print("Should return 6 (a node) ", lca(root, nodeA, nodeB).val)
+	
+def lcaTest2():
+	nodeB = TreeNode(7)
+	nodeA = TreeNode(5, nodeB, None)
+	
+	root = TreeNode(4, TreeNode(2, TreeNode(1), TreeNode(3)), TreeNode(6, nodeA, None))
+	
+	clear()
+	print("Should return None ", lca(root, nodeA, nodeB))
+	
+def lcaTest3():
+	nodeA = TreeNode(2, TreeNode(1), TreeNode(3))
+	nodeB = TreeNode(6, TreeNode(5), TreeNode(7))
+	
+	root = TreeNode(4, nodeA, nodeB)
+	
+	clear()
+	print("Should return 4 (a node) ", lca(root, nodeA, nodeB).val)
+	
+lcaTest()
+lcaTest2()
+lcaTest3()
 
 """
 9.4
 
-Lowest Common Ancestor
+Lowest Common Ancestor with parent ptr
+
+last sol:
+We can do a preorder traversal, looking for either of the two nodes in the left or right subtrees
+if one node is in the left subtree and the other node is in the right subtree, return cur
+
+Assuming that least common ancestor cannot be nodeA or nodeB
+
+Now what can we add with the parent ptr?
+
+we dont have to traverse with the root, we have the nodes, we have parent pointers, just go up
+
+brute force:
+create a set of one traversal going up to the root.
+
+perform the other traversal up, check if cur is in the set
+if cur in set return True
+if non in the second traversal in set return False
+
+if the tree is balanced:
+runtime o(log(n))
+memory o(log(n))
+
+tree is basically a ll:
+runtime o(n)
+memory o(n)
+
+better!:
+find the depth of each node
+
+put a ptr at each node
+increment the deeper one until the ptrs are at the same depth
+climb up until curA is curB or either is None
+
+if the tree is balanced:
+runtime o(log(n))
+memory o(1)
+
+tree is basically a ll:
+runtime o(n)
+memory o(1)
 """
+
+class TreeNodeParent:
+	def __init__(self, val=0, left=None, right=None, parent=None):
+		self.val = val
+		self.left = left
+		self.right = right
+		self.parent = parent
+
+def lcaParent(nodeA, nodeB):
+	def depth(node):
+		if node is None:
+			return 0
+		return depth(node.parent) + 1
+	
+	aDepth = depth(nodeA)
+	bDepth = depth(nodeB)
+	
+	curA = nodeA
+	curB = nodeB
+	
+	if bDepth > aDepth:
+		aDepth, bDepth = bDepth, aDepth
+		curA, curB = curB, curA
+	
+	while aDepth > bDepth:
+		curA = curA.parent
+	
+	while curA is not None and curB is not None:
+		if curA is curB:
+			return curA
+		curA = curA.parent
+		curB = curB.parent
+	
+	return None
+
+def lcaTest():
+	root = TreeNodeParent(0)
+	nodeA = TreeNodeParent(2, TreeNode(1), TreeNode(3), root)
+	nodeB = TreeNodeParent(6, TreeNode(5), TreeNode(7), root)
+	
+	clear()
+	print("Should return 0 (a node) ", lcaParent(nodeA, nodeB).val)
+
+def lcaTest2():
+	root = TreeNodeParent(0)
+	root2 = TreeNodeParent(1)
+	nodeA = TreeNodeParent(5, None, None, root)
+	nodeB = TreeNodeParent(7, None, None, root2)
+	
+	clear()
+	print("Should return None ", lcaParent(nodeA, nodeB))
+	
+lcaTest()
+lcaTest2()
