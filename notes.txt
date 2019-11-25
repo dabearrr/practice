@@ -2,3 +2,4 @@ x & (x-1) sets the least significant one bit to zero
 string parse from the back
 linked list fast and slow ptr
 linked list almost always has a simple solution with o(n) memory, and a complex traversal solution with o(1) memory
+

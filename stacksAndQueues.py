@@ -533,8 +533,507 @@ def expressionTest():
 	test1 = "1, 2, x"
 	test2 = "3, 4, +, 2, x, 1, +"
 	
+	
 	clear()
 	print("Expecting 2, got: ", expression(test1))
 	print("Expecting 15, got: ", expression(test2))
 
 expressionTest()
+
+"""
+8.3
+
+Matching parenthesis
+
+validate if a string has correctly formatted parenthesis:
+
+( ) [ ] { }
+
+we can use a stack
+compare stack.top to insert value
+
+if new value is open, just add it
+if new value is closed, it must match top or else return false
+
+return true at end of string
+
+o(n) runtime
+o(n) space
+"""
+
+def isMatching(S):
+	closed = {")" : "(", "[" : "]", "{" : "}"}
+	stack = []
+	
+	for item in S:
+		# means it's an open paren
+		if item in closed.values():
+			stack.append(item)
+		elif item in closed:
+			if not stack:
+				return False
+			elif closed[item] == stack[-1]:
+				stack.pop()
+			else:
+				return False
+		else:
+			raise InputError(item, " is not a valid character")
+	
+	if stack:
+		return False
+	
+	return True
+
+def isMatchingTest():
+	test = "[{}]()()[[(())]]"
+	test2 = "[{}]()()[[(())]"
+	test3 = "[{}]()()[[(())]}"
+	
+	clear()
+	print("Expecting True ", test)
+	print("Expecting False ", test2)
+	print("Expecting False ", test3)
+	
+isMatchingTest()
+
+
+"""
+8.4 normalize paths
+
+/././cool/../cool = /cool
+cur/../cur = cur
+
+take a path and turn it into its shortest form
+
+start:
+check if absolute or relative (does it start with slash)
+. = dont do anything to stack
+.. = stack pop
+else = stack add
+
+
+
+
+"""
+
+def normalizePaths(path):
+	def isAbsolute(path):
+		return path[0] == "/"
+	def stackToPath(stack):
+		stack.reverse()
+		return "/".join(stack)
+	boolAbsolute = isAbsolute(path)
+	splitPath = path.split("/")
+	if boolAbsolute:
+		splitPath = splitPath[1:]
+	
+	stack = []
+	for section in splitPath:
+		if section == "..":
+			# if user goes too far back, error out
+			if not stack:
+				raise InputError("path is invalid, too many ..s")
+			stack.pop()
+		elif section == ".":
+			continue
+		else:
+			stack.append(section)
+			
+	if boolAbsolute:
+		return "/" + stackToPath(stack)
+		
+	return stackToPath(stack)
+	
+def normalizePathsTest():
+	path1 = "/././cool/../cool"
+	path2 = "cur/../cur"
+	path3 = "cur/../cur/../.."
+	
+	clear()
+	
+	print("expecting /cool ", normalizePaths(path1))
+	print("expecting cur ", normalizePaths(path2))
+	
+	try:
+		print("expecting error")
+		print(normalizePaths(path3))
+	except:
+		print("correctly errored out")
+	finally:
+		print("should say \" correctly errored out \" ^")
+
+normalizePathsTest()
+
+"""
+8.6
+Compute buildings with a sunset view
+
+
+processing:
+We reading in buildings from east to west
+array = [2 1 4 6 5]
+
+buildings will be
+5 < 6 < 4 < 1 < 2
+
+in this case, only 6 and 5 can see the west sunset,
+the rest are blocked by 6 and 4
+
+we can use a stack to process the array
+
+whenever we see a new building, while stack.top() < new building, pop them from the stack
+
+the resulting stack is the solution
+
+runtime is O(n) (at worst we pop all the previous elements, processing 2n - 1 elements)
+memory is o(n) (all buildings have sunset view and are added to the stack)
+"""
+
+def sunsetViews(A):
+	stack = []
+	
+	for item in A:
+		if stack:
+			while stack and stack[-1] < item:
+				stack.pop()
+		stack.append(item)
+	
+	return stack
+
+def sunsetViewsTest():
+	B = [2, 1, 4, 6, 5, 7, 3]
+	C = [100, 80, 101, 20, 21, 19, 30, 11, 6, 5, 12, 3, 4, 8, 7, 1]
+	
+	clear()
+	print("Expecting 3 and 7: ", sunsetViews(B))
+	print("Expecting 101 30 12 8 7 1: ", sunsetViews(C))
+
+sunsetViewsTest()
+
+"""
+8.6 binary tree by depths
+
+put nodes in lists for each depth
+sorted from left to right
+
+BFS:
+Do a breadth first traversal, tracking the height as we go along the tree
+we add to that height's list as we go across
+
+DFS:
+Do depth first traversal, passing the height recursively as we go along the tree
+we add to that height's list as we go across
+"""
+class TreeNode:
+	def __init__(self, val=None, left=None, right=None):
+		self.val = val
+		self.left = left
+		self.right = right
+		
+def bfsDepths(root):
+	q = deque()
+	
+	# add root
+	q.append(root)
+	h = 0
+	ans = []
+	
+	while q:
+		temp = deque()
+		while q:
+			cur = q.popleft()
+			if len(ans) < h + 1:
+				ans.append([])
+			ans[h].append(cur.val)
+			if cur.left:
+				temp.append(cur.left)
+			if cur.right:
+				temp.append(cur.right)
+		h += 1
+		q = temp
+	
+	return ans
+
+def dfsDepths(root):
+	ans = []
+	
+	def traverse(cur, height):
+		if cur is None:
+			return
+		traverse(cur.left, height + 1)
+		
+		while len(ans) < height + 1:
+			ans.append([])
+		ans[height].append(cur.val)
+		
+		traverse(cur.right, height + 1)
+	
+	traverse(root, 0)
+	
+	return ans
+
+def depthTest():
+	testTree = TreeNode(314, TreeNode(6, TreeNode(271, TreeNode(28), TreeNode(0)), TreeNode(561, None, TreeNode(3, TreeNode(17)))), TreeNode(6, TreeNode(2, None, TreeNode(1, TreeNode(401, None, TreeNode(641)), TreeNode(257))), TreeNode(271, None, TreeNode(28))))
+	
+	clear()
+	print(bfsDepths(testTree))
+	print(dfsDepths(testTree))
+	
+depthTest()
+
+"""
+8.7 Implement a circular queue
+
+array as a queue
+resize dynamically
+
+can start head and tail at dummy -1
+
+insert at t + 1
+"""
+
+class CircleQueue:
+	def __init__(self, capacity):
+		self.capacity = capacity
+		self.length = 0
+		self.array = [None] * capacity
+		self.head = None
+		self.tail = None
+	
+	def getLength(self):
+		return self.length
+		
+	def dequeue(self):
+		if self.head is None and self.tail is None:
+			raise Exception("popped from empty queue")
+			
+		ans = self.array[self.head]
+		if self.head == self.tail:
+			self.head = self.tail = None
+		else:
+			self.head = (self.head + 1) % self.capacity
+		self.length -= 1
+		
+		return ans
+	def resizeIsNeeded(self):
+		return self.length == self.capacity
+		
+	def resize(self):
+		self.array = self.array + [None] * self.capacity
+		self.capacity *= 2
+	
+	def enqueue(self, value):
+		if self.head is None and self.tail is None:
+			self.head = 0
+			self.tail = -1
+		else:
+			if self.resizeIsNeeded():
+				self.resize()
+		self.length += 1
+		self.tail = (self.tail + 1) % self.capacity
+		self.array[self.tail] = value
+
+def circleQueueTest():
+	q = CircleQueue(3)
+	
+	q.enqueue(1)
+	q.enqueue(2)
+	q.enqueue(3)
+	
+	print("expecting 1", q.dequeue())
+	print("expecting 2", q.dequeue())
+	q.enqueue(4)
+	q.enqueue(5)
+	print("expecting 3", q.dequeue())
+	print("expecting 4", q.dequeue())
+	print("expecting 5", q.dequeue())
+	
+	try:
+		q.dequeue()
+		print("did not throw error when dequeue was called on empty queue")
+	except:
+		print("correctly threw error when dequeue was called on empty queue")
+
+def circleQueueTest2():
+	q = CircleQueue(3)
+	
+	q.enqueue(1)
+	q.enqueue(2)
+	q.enqueue(3)
+	q.enqueue(4) # triggers a resize
+	q.enqueue(5)
+	
+	print("expecting 5", q.getLength())
+	
+	print("expecting 1", q.dequeue())
+	print("expecting 4", q.getLength())
+	print("expecting 2", q.dequeue())
+	print("expecting 3", q.getLength())
+	print("expecting 3", q.dequeue())
+	print("expecting 2", q.getLength())
+	print("expecting 4", q.dequeue())
+	print("expecting 1", q.getLength())
+	print("expecting 5", q.dequeue())
+	print("expecting 0", q.getLength())
+	
+	try:
+		q.dequeue()
+		print("did not throw error when dequeue was called on empty queue")
+	except:
+		print("correctly threw error when dequeue was called on empty queue")
+
+		
+circleQueueTest()
+circleQueueTest2()
+
+"""
+8.8 queue using stacks
+
+ok lets try one stack
+
+push 1 2 3
+
+[1 2 3]
+pop gets 3 x wrong
+
+we can move it to a second stack
+
+[3 2 1]
+pop gets 1! good
+
+if pop stack is empty move push stack to pop stack
+then pop
+
+else just pop from pop stack
+"""
+
+class QueueFromStacks:
+	def __init__(self):
+		self.pushStack = []
+		self.popStack = []
+	
+	def push(self, value):
+		self.pushStack.append(value)
+	
+	def pop(self):
+		if not self.popStack:
+			if not self.pushStack:
+				raise Exception("pop called on empty queue")
+			while self.pushStack:
+				self.popStack.append(self.pushStack.pop())
+		
+		return self.popStack.pop()
+
+def queueFromStacksTest():
+	q = QueueFromStacks()
+	
+	q.push(1)
+	q.push(2)
+	q.push(3)
+	
+	clear()
+	
+	print("Expecting 1", q.pop())
+	print("Expecting 2", q.pop())
+	q.push(4)
+	q.push(5)
+	print("Expecting 3", q.pop())
+	print("Expecting 4", q.pop())
+	print("Expecting 5", q.pop())
+	
+	try:
+		q.pop()
+		print("Failed to error out on empty queue pop")
+	except:
+		print("Succeeded to error out on empty queue pop")
+
+queueFromStacksTest()
+
+"""
+8.9 Queue with Max
+
+We need a queue struct that also tracks the max of the queue
+
+brute force:
+search the whole array on max called
+o(n) max runtime
+o(1) mem
+
+better:
+track the max in a max stack, whenever an insert occurs, while top is less, pop it, then push
+max is the bottom of the stack at all times
+assuming a doubly linked list implementation
+o(1) max runtime
+o(n) mem (decreasing list)
+
+however, insert becomes o(n) (worst case, decreasing list then a number greater than all the previous values)
+
+"""
+
+class QueueWithMax:
+	def __init__(self):
+		# this is a doubly linked list that we must interact with at both ends
+		self.maxList = deque()
+		self.queue = deque()
+	
+	def push(self, value):
+		self.queue.append(value)
+		
+		if self.maxList:
+			while self.maxList and self.maxList[-1] < value:
+				self.maxList.pop()
+		# always append to the end of the maxList
+		self.maxList.append(value)
+	
+	def pop(self):
+		if not self.queue:
+			raise Exception("called pop on empty queue")
+		
+		# normal queue interaction
+		ans = self.queue.popleft()
+		
+		if ans == self.maxList[0]:
+			# if we popped the max, pop it from the maxlist on the left
+			self.maxList.popleft()
+		
+		return ans
+		
+	def max(self):
+		if not self.maxList:
+			raise Exception("called max on empty list")
+		
+		# return the max at the left of the doubly linked list
+		return self.maxList[0]
+
+def queueWithMaxTest():
+	q = QueueWithMax()
+	
+	q.push(5)
+	q.push(3)
+	q.push(8)
+	q.push(6)
+	
+	clear()
+	
+	print("Expecting 8", q.max())
+	print("Expecting 5", q.pop())
+	print("Expecting 8", q.max())
+	print("Expecting 3", q.pop())
+	print("Expecting 8", q.max())
+	print("Expecting 8", q.pop())
+	print("Expecting 6", q.max())
+	print("Expecting 6", q.pop())
+	
+	try:
+		q.max()
+		print("Failed to except on max called on empty queue")
+	except:
+		print("Succeeded to except on max called on empty queue")
+	
+	try:
+		q.pop()
+		print("Failed to except on pop called on empty queue")
+	except:
+		print("Succeeded to except on pop called on empty queue")
+
+queueWithMaxTest()
