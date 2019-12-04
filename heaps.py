@@ -249,6 +249,7 @@ def kClosestStarsTest():
     print("Expecting 555 444 222 333 666 010 001 (in any order), ", kClosestStars(11, l))
 
 kClosestStarsTest()
+
 """
 10.5 Compute the median of online data
 
@@ -261,4 +262,66 @@ mem n
 
 better:
 I think we can use two heaps
+
+top half of list will reside in minheap
+bottom half in maxheap
+
+when one has two more units, pop the heap top and append it to the other heap
+
+if the heaps are the same size, median is heap1 top + heap2 top / 2
+
+if the heaps are different sizes, the median is the larger of the heaps' top
 """
+
+class RunningMedian:
+	def __init__(self):
+		self.minHeap = []
+		self.maxHeap = []
+	
+	def _balanceHeaps(self):
+		if len(self.minHeap) - len(self.maxHeap) > 1:
+			# signs are inverted
+			heapq.heappush(self.maxHeap, -heapq.heappop(self.minHeap))
+		elif len(self.maxHeap) - len(self.minHeap) > 1:
+			# signs are inverted
+			heapq.heappush(self.minHeap, -heapq.heappop(self.maxHeap))
+			
+	def append(self, value):
+		if not self.minHeap or value >= self.minHeap[0]:
+			heapq.heappush(self.minHeap, value)
+		else:
+			# there is no max heap in python, to get around this, we simply insert negative values
+			heapq.heappush(self.maxHeap, -value)
+		
+		self._balanceHeaps()
+	def median(self):
+		if not self.minHeap and not self.maxHeap:
+			raise Exception("Median called with no entries in the runningMedian")
+		# keep negative heap in mind
+		if len(self.minHeap) == len(self.maxHeap):
+			return (self.minHeap[0] - self.maxHeap[0]) / 2
+		elif len(self.minHeap) > len(self.maxHeap):
+			return self.minHeap[0]
+		else:
+			return -self.maxHeap[0]
+
+def runningMedianTest():
+	rm = RunningMedian()
+	
+	clear()
+	rm.append(1)
+	print("Expecting 1, got ", rm.median())
+	rm.append(0)
+	print("Expecting 0.5, got ", rm.median())
+	rm.append(3)
+	print("Expecting 1, got ", rm.median())
+	rm.append(5)
+	print("Expecting 2, got ", rm.median())
+	rm.append(2)
+	print("Expecting 2, got ", rm.median())
+	rm.append(0)
+	print("Expecting 1.5, got ", rm.median())
+	rm.append(1)
+	print("Expecting 1, got ", rm.median())
+
+runningMedianTest()
