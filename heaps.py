@@ -145,3 +145,120 @@ def kIncreasingDecreasingTest():
 	print("Expecting 52, 131, 190, 221, 294, 339, 393, 418. 442. 452", kIncreasingDecreasing(4, A))
 
 kIncreasingDecreasingTest()
+
+
+"""
+10.3 Sort an almost sorted array
+
+An array is almost sorted, any element is at most k away from its correctly sorted position
+
+brute force:
+we can sort the whole array naively
+nlogn runtime
+1 memory
+
+better:
+we can track a 2k sized heap, performing heap pop to get the correct next item 
+n + klogk runtime
+k memory
+
+"""
+
+def sortAlmostSortedArray(k, A):
+    # effecively it is unsorted
+    if k + 1 >= len(A):
+        A.sort()
+        return A
+        
+    heap = []
+    
+    for i in range(k + 1):
+        heapq.heappush(heap, A[i])
+    
+    cur = k + 1
+    ans = []
+    while heap:
+        ans.append(heapq.heappop(heap))
+        
+        if cur < len(A):
+            heapq.heappush(heap, A[cur])
+            cur += 1
+    return ans
+    
+def sortAlmostSortedArrayTest():
+    temp = [3, 2, 1, 6, 5, 4, 9, 8, 7, 12, 11, 10]
+    
+    clear()
+    print("Expected 1 2 3 4 5 6 7 8 9 10 11 12 ", sortAlmostSortedArray(2, temp))
+    print("Expected 1 2 3 4 5 6 7 8 9 10 11 12 ", sortAlmostSortedArray(12, temp))
+    
+sortAlmostSortedArrayTest()
+
+"""
+10.4 compute the k closest stars
+
+consider the earth's position at 0, 0, 0
+star's distance from earth is sqrt of a^2 + b^2 + c^2, but we can scale it without the sqrt
+
+we can create a maxheap, inserting the first k items
+
+from k position on, if k > max of the heap, dont insert it
+
+return k smallest from the heap
+
+runtime o nlogn
+mem o n
+"""
+
+def kClosestStars(k, A):
+    class Star:
+        def __init__(self, x, y, z):
+            self.x = x
+            self.y = y
+            self.z = z
+        def distance(self):
+            return self.x ** 2 + self.y ** 2 + self.z ** 2
+        def __lt__(self, other):
+            # want maxheap not minheap, so we reverse the ordering
+            return not (self.distance() < other.distance())
+    
+    if k > len(A):
+        return A
+    
+    heap = []
+    for i in range(k):
+        cur = A[i]
+        heapq.heappush(heap, Star(cur[0], cur[1], cur[2]))
+    
+    for i in range(k, len(A)):
+        cur = A[i]
+        next = Star(cur[0], cur[1], cur[2])
+        
+        if next.distance() < heap[0].distance():
+            heapq.heappush(heap, next)
+            heapq.heappop(heap)
+    
+    return [(x.x, x.y, x.z) for x in heap]
+
+def kClosestStarsTest():
+    l = [(5, 5, 5), (4, 4, 4), (2, 2, 2), (3, 3, 3), (6, 6, 6), (0, 1, 0), (0, 0, 1)]
+    
+    clear()
+    
+    print("Expecting 001 010 222, ", kClosestStars(3, l))
+    print("Expecting 555 444 222 333 666 010 001 (in any order), ", kClosestStars(11, l))
+
+kClosestStarsTest()
+"""
+10.5 Compute the median of online data
+
+We want to compute the running median of a sequence of numbers
+
+brute force:
+sort the current list, get the median 
+runtime nlogn
+mem n
+
+better:
+I think we can use two heaps
+"""
