@@ -780,7 +780,7 @@ def getRandomNode(root, size):
 
 """
 EPI
-Chapter 9
+Chapter 9 B Trees
 
 9.1, 9.4, 9.2, 9.12, 9.11, 9.13, 9.16
 """
@@ -1258,7 +1258,7 @@ connectNextSiblingTest()
 
 
 """
-EPI Chapter 14
+EPI Chapter 14 BST
 
 1 2 3 4 5 7 8
 """
@@ -1767,7 +1767,7 @@ buildMinHeightBstTest()
 
 
 """
-18
+EPI Chapter 18
 1 2 3 5 7
 
 Graphs!!

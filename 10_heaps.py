@@ -325,3 +325,57 @@ def runningMedianTest():
 	print("Expecting 1, got ", rm.median())
 
 runningMedianTest()
+
+"""
+10.6 compute the k largest elements in a max-heap
+
+get the k largest elements in a max-heap
+
+we can heappop k times to get it
+
+call heapq nsmallest
+
+better:
+check the children using ordering
+for A[n], A[2n + 1], A[2n + 2] are the children
+
+add to a heap, pop n times
+"""
+
+def computeKLargest(H, k):
+	class HeapItem(collections.namedtuple("HeapItem", ["index", "value"])):
+		def __lt__(self, other):
+			return self.value < other.value
+	ans = []
+	helperHeap = [HeapItem(0, H[0])]
+	
+	while len(ans) < k:
+		print(helperHeap)
+		top = heapq.heappop(helperHeap)
+		ans.append(top.value)
+		
+		leftChildIndex = (2 * top.index) + 1
+		print(leftChildIndex)
+		if leftChildIndex < len(H):
+			heapq.heappush(helperHeap, HeapItem( leftChildIndex, H[leftChildIndex]))
+		if leftChildIndex + 1 < len(H):
+			heapq.heappush(helperHeap, HeapItem(leftChildIndex + 1, H[leftChildIndex + 1]))
+	
+	return ans
+
+def computeKLargestTest():
+	heap = []
+	heapq.heappush(heap, -1)
+	heapq.heappush(heap, -5)
+	heapq.heappush(heap, -10)
+	heapq.heappush(heap, -15)
+	heapq.heappush(heap, -20)
+	heapq.heappush(heap, -25)
+	heapq.heappush(heap, -30)
+	heapq.heappush(heap, -35)
+	heapq.heappush(heap, -40)
+	
+	clear()
+	print("Expecting 40, 35, 30, 25, 20 " , computeKLargest(heap, 5))
+
+computeKLargestTest()
