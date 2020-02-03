@@ -303,10 +303,54 @@ output: list of intervals (no overlap)
 
 
 """
-Interval = collections.namedtuple('Interval', ['start', 'end'])
-Endpoint = collections.namedtuple('Endpoint', ['time', 'isOpen'])
 def computeUnionOfIntervals(A):
+	Interval = collections.namedtuple('Interval', ['start', 'end'])
+	Endpoint = collections.namedtuple('Endpoint', ['time', 'isOpen'])
+
+	A.sort(key=lambda i: (i.start.time, i.end.time))
+
+	def isOverlapping(a, b):
+		if a.start.time > b.start.time:
+			return isOverlapping(b, a)
+		if a.end.time <= b.start.time:
+			return True
 	
+	def union(a, b):
+		newInterval = Interval(None, None)
+		if a.start < b.start or (a.start == b.start and not a.start.isOpen):
+			newInterval.start = a.start
+		else:
+			newInterval.start = b .start
+		
+		if a.end > b.end or (a.end == b.end and not a.start.isOpen):
+			newInterval.end = a.end
+		else:
+			newInterval.end = b.end
+		
+		return newInterval
+	
+	result = []
+	curInterval = A[0]
+
+	for i in range(1, len(A)):
+		if isOverlapping(curInterval, A[i])
+			curInterval = union(curInterval, A[i])
+		else:
+			result.append(curInterval)
+			curInterval = A[i]
+	
+	return result
+
+def computeUnionOfIntervalsTest():
+	Interval = collections.namedtuple('Interval', ['start', 'end'])
+	Endpoint = collections.namedtuple('Endpoint', ['time', 'isOpen'])
+
+	A = [Interval(Endpoint(0, True), Endpoint(3, True)), Interval(Endpoint(9, True), Endpoint(11, False)), Interval(Endpoint(1, False), Endpoint(1, False)), Interval(Endpoint(2, False), Endpoint(4, False)), Interval(Endpoint(8, False), Endpoint(11, True)), Interval(Endpoint(3, False), Endpoint(4, True)), Interval(Endpoint(5, False), Endpoint(7, True)), Interval(Endpoint(7, False), Endpoint(8, True))]
+
+	clear()
+	print("Expecting 0 open to 4 closed, 5 closed to 11 closed", computeUnionOfIntervals(A))
+
+computeUnionOfIntervalsTest()
 
 
 """
