@@ -196,10 +196,119 @@ mergeTwoSortedArraysTest()
 
 """
 13.5 Render a calendar
+
+find the maximum height of a calendar event
+event has start, end
+
+input: events, event, L (max height of events stack)
+output: maximum number of concurrent events
+
+if events overlap, they stack on top of each other.
+events take up L space in total
+events that are stacked split the L space equally
+
+
+brute force:
+check all times between the earliest start time and latest end time, check the whole events array to see which apply at that time
+track max
+O(deltaT^n) runtime
+O(1) mem
+
+better:
+considering events:
+input: list of events
+Event:
+start
+end
+
+we can watch the endpoints:
+Endpoint:
+time
+active (start = 1, end = -1)
+
+we can add endpoints to a heap, sorted by time
+
+we pop from the heap, tracking the sum of active as a counter for concurrent events
 """
+class Event:
+	def __init__(self, start, end):
+		self.start = start
+		self.end = end
+
+def maxConcurrentEvents(A):
+	class Endpoint:
+		def __init__(self, time, concurrentShift):
+			self.time = time
+			self.concurrentShift = concurrentShift
+		def __lt__(self, other):
+			if self.time == other.time:
+				return self.concurrentShift > other.concurrentShift
+			return self.time < other.time
+	
+	# can potentially use heap instead here, unsure if faster
+	endpoints = []
+	for event in A:
+		endpoints.append(Endpoint(event.start, 1))
+		endpoints.append(Endpoint(event.end, -1))
+	endpoints.sort()
+	
+	maxConcurrent = 0
+	curConcurrent = 0
+	for item in endpoints:
+		curConcurrent += item.concurrentShift
+		maxConcurrent = max(maxConcurrent, curConcurrent)
+	
+	return maxConcurrent
+
+# using lambda sort on namedtuple
+def maxConcurrentEvents2(A):
+	Endpoint = collections.namedtuple('Endpoint', ['time', 'concurrentShift'])
+	
+	# can potentially use heap instead here, unsure if faster
+	endpoints = []
+	for event in A:
+		endpoints.append(Endpoint(event.start, 1))
+		endpoints.append(Endpoint(event.end, -1))
+	endpoints.sort(key=lambda e: (e.time, -e.concurrentShift))
+	
+	maxConcurrent = 0
+	curConcurrent = 0
+	for item in endpoints:
+		curConcurrent += item.concurrentShift
+		maxConcurrent = max(maxConcurrent, curConcurrent)
+	
+	return maxConcurrent
+	
+def maxConcurrentEventsTest():
+	A = []
+	A.append(Event(1, 5))
+	A.append(Event(2, 7))
+	A.append(Event(4, 5))
+	A.append(Event(6, 10))
+	A.append(Event(8, 9))
+	A.append(Event(9, 17))
+	A.append(Event(11, 13))
+	A.append(Event(12, 15))
+	A.append(Event(14, 15))
+	
+	clear()
+	print("Expecting 3, ", maxConcurrentEvents(A))
+	print("Expecting 3, ", maxConcurrentEvents2(A))
+
+maxConcurrentEventsTest()
 """
-13.7
+13.7 union intervals
+input: list of intervals 
+output: list of intervals (no overlap)
+
+
 """
+Interval = collections.namedtuple('Interval', ['start', 'end'])
+Endpoint = collections.namedtuple('Endpoint', ['time', 'isOpen'])
+def computeUnionOfIntervals(A):
+	
+
+
 """
 13.8
 """
