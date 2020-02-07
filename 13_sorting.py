@@ -16,6 +16,14 @@ import functools
 def clear():
 	print("-----------------------")
 	
+def printLl(A):
+	if A is None:
+		print("NONE")
+	temp = A
+	while temp:
+		print(temp.val, end=" ")
+		temp = temp.next
+	print("")
 """
 if all items are known to be k distance from their correct location
 min heap runs in o(nlog(k))
@@ -308,37 +316,41 @@ def computeUnionOfIntervals(A):
 	Endpoint = collections.namedtuple('Endpoint', ['time', 'isOpen'])
 
 	A.sort(key=lambda i: (i.start.time, i.end.time))
+	
+	print(A)
 
 	def isOverlapping(a, b):
 		if a.start.time > b.start.time:
 			return isOverlapping(b, a)
-		if a.end.time <= b.start.time:
+		if a.end.time >= b.start.time:
 			return True
 	
 	def union(a, b):
-		newInterval = Interval(None, None)
+		start = end = None
 		if a.start < b.start or (a.start == b.start and not a.start.isOpen):
-			newInterval.start = a.start
+			start = a.start
 		else:
-			newInterval.start = b .start
+			start = b.start
 		
 		if a.end > b.end or (a.end == b.end and not a.start.isOpen):
-			newInterval.end = a.end
+			end = a.end
 		else:
-			newInterval.end = b.end
+			end = b.end
 		
-		return newInterval
+		return Interval(start, end)
 	
 	result = []
 	curInterval = A[0]
 
 	for i in range(1, len(A)):
-		if isOverlapping(curInterval, A[i])
+		print(curInterval)
+		if isOverlapping(curInterval, A[i]):
+			print("overlap found", curInterval, A[i])
 			curInterval = union(curInterval, A[i])
 		else:
 			result.append(curInterval)
 			curInterval = A[i]
-	
+	result.append(curInterval)
 	return result
 
 def computeUnionOfIntervalsTest():
@@ -354,8 +366,152 @@ computeUnionOfIntervalsTest()
 
 
 """
-13.8
+13.8 Sort array with repeated elements
+elements do not have to be sorted, just grouped
+[b, b, a, a] is ok
+[a, a, b, b] is also ok
+
+in this scenario, using a hash table is the simplest solution, 
+bucketing values together then traversing the hash table to get each value's count
+
+o(n) runtime
+o(n) mem
+
+now we have to consider that the groups must be sorted.
+
+[b, b, a, a] is NOT ok
+[a, a, b, b] is ok
+
+how can we sort the groups?
+
+if we sort the keys in the hash table:
+o(dlog(d) + n) runtime (where d is the amount of distinct entries)
+o(n) mem
+
+better:
+if we can scope the amount of distinct values, we can achieve linear runtime:
+since we are using age as a sort key:
+the longest anyone has lived is around 120, we can use 150 as a hard cap
+
+we create an array of size 150, to hold our buckets
+we traverse the students array, adding them to buckets
+each bucket will have either None or some students at the end, which we add to the result
+
+runtime = O(n + k=150)
+mem = o(n + k)
 """
+
+# Expects 0 <= age < 150
+def sortStudents(S):
+	# BE CAREFUL. using buckets = [] * 150 will reference the same object, so don't do that!
+	buckets = [[] for x in range(150)]
+	
+	for student in S:
+		buckets[student.age].append(student)
+	
+	result = []
+	for bucket in buckets:
+		for student in bucket:
+			result.append(student)
+	
+	return result
+	
+def sortStudentsTest():
+	Student = collections.namedtuple('Student', ['age', 'name'])
+	students = [Student(3, 'c'), Student(3, 'c'), Student(3, 'c'), Student(22, 'w'), Student(22, 'w'), Student(22, 'w'), Student(22, 'w'), Student(22, 'w'), Student(22, 'w'), Student(22, 'w'), Student(22, 'w'), Student(1, 'a'), Student(1, 'a'), Student(1, 'a'), Student(1, 'a')]
+	
+	clear()
+	print("Expecting 1s, 3s, 22s: ", sortStudents(students))
+	
+sortStudentsTest()
+
 """
-13.10
+13.10 fast sorting for lists
+
+sort a linked list fast
+
+brute force:
+convert to array, sort
+o(nlogn) runtime
+o(n) mem
+
+better:
+we use the properties of linked lists
+ll are good at insertion and deletion
+
+find min, remove and move to newlist
+O(n^2) runtime
+o(n) mem
+
+best:
+perform merge sort on linked list
+o(nlogn) runtime
+o(1) mem
 """
+
+class Node:
+	def __init__(self, val=0, next=None):
+		self.val = val
+		self.next = next
+
+def sort_linked_list(A):
+	"""
+	trip ups:
+	linked lists are like lists too
+	we need nlogn comparisons to sort
+	
+	merge sort is easiest to implement!
+	
+	to track a newly developing list, making a dummy node is good
+	BUT DONT FORGET, we need to remember the start of the list
+	"""
+	def merge_two_sorted_lists(A, B):
+		curA = A
+		curB = B
+		
+		# dummy
+		result = Node()
+		cur = result
+		
+		while curA or curB:
+			if not curB or (curA and curA.val < curB.val):
+				cur.next = curA
+				curA = curA.next
+				cur = cur.next
+			else:
+				cur.next = curB
+				curB = curB.next
+				cur = cur.next
+		
+		return result.next
+	
+	def merge_sort(cur):
+		# base case, list is empty or has one entry
+		if not cur or not cur.next:
+			return cur
+	
+		# split list into halves
+		pre_slow = None
+		slow = fast = cur
+		
+		while fast and fast.next:
+			pre_slow = slow
+			slow = slow.next
+			fast = fast.next.next
+		
+		pre_slow.next = None
+		
+		# merge left, merge right, merge left and right
+		return merge_two_sorted_lists(merge_sort(cur), merge_sort(slow))
+	
+	return merge_sort(A)
+	
+def sortLinkedListTest():
+	A = Node(16, Node(8, Node(4, Node(1, Node(2, Node(60, Node(30, Node(-15, Node(45)))))))))
+	
+	clear()
+	printLl(A)
+	print("is now sorted to")
+	printLl(sort_linked_list(A))
+
+sortLinkedListTest()
