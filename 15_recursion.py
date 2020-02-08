@@ -780,5 +780,311 @@ def sudokuSolverTest():
 	
 sudokuSolverTest()
 """
-15.10
+15.10 Grey Code computation
+
+an n-bit grey code is a permutation of (0, 1, 2, ..., 2^n-1) s.t. the binary representations of successive integers differ only by 1
+
+1 bit
+0 1
+
+2 bit
+00 01 11 10
+
+3 bit
+000 100 101 111 110 010 011 001
+
+this can be done with backtracking
+
+trying all in set (0 -> 2^n-1)
+
+if legal move (first is always legal)
+
+repeat
+
+trying all in set (0 -> 2^n-1) - first pick
+
+if legal move
+
+repeat
 """
+
+"""
+Correct answer, but it does unnecessary work
+it computes ALL legal grey codes. If we only want one, we need to terminate quick
+"""
+def grayCode(n):
+	def getPool(n):
+		pool = set()
+		for i in range(int(math.pow(2, n))):
+			pool.add(i)
+		
+		return pool
+	
+	def differsByOneBit(a, b):
+		MASK = 1
+		seenDiff = False
+		
+		while a or b:
+			if a & MASK != b & MASK:
+				if seenDiff:
+					return False
+				seenDiff = True
+			a >>= 1
+			b >>= 1
+		
+		return seenDiff
+	
+	def isLegalMove(item, cur):
+		if not cur:
+			return True
+		
+		return differsByOneBit(item, cur[-1])
+	
+	def dfs(pool):
+		count[0] += 1
+		if not pool:
+			result[0] = copy.deepcopy(cur)
+			return
+		
+		for item in pool:
+			if isLegalMove(item, cur):
+				cur.append(item)
+				pool.remove(item)
+				
+				dfs(pool)
+				
+				cur.pop()
+				pool.add(item)
+				
+	
+	count = [0]
+	result = [None]
+	cur = []
+	dfs(getPool(n))
+	
+	print(count[0], " calls to dfs")
+	return result[0]
+
+
+"""
+stops after 1st sol!!
+
+:)
+
+we can improve though. On each legal move search we search all items in the pool 0 - 2^n
+
+if this pool is greater than n,
+it is faster to just check items with one bit flipped from the last pick (n candidates)
+"""
+def grayCode2(n):
+	def getPool(n):
+		pool = set()
+		for i in range(int(math.pow(2, n))):
+			pool.add(i)
+		
+		return pool
+	
+	def differsByOneBit(a, b):
+		MASK = 1
+		seenDiff = False
+		
+		while a or b:
+			if a & MASK != b & MASK:
+				if seenDiff:
+					return False
+				seenDiff = True
+			a >>= 1
+			b >>= 1
+		
+		return seenDiff
+	
+	def isLegalMove(item, cur):
+		if not cur:
+			return True
+		
+		return differsByOneBit(item, cur[-1])
+	
+	def dfs(pool):
+		count[0] += 1
+		# solution already found
+		if result[0]:
+			return
+		# solution just found
+		if not pool:
+			result[0] = copy.deepcopy(cur)
+			return
+		
+		for item in pool:
+			if isLegalMove(item, cur):
+				cur.append(item)
+				pool.remove(item)
+				
+				dfs(pool)
+				
+				cur.pop()
+				pool.add(item)
+		
+		return
+				
+			
+	count = [0]
+	result = [None]
+	cur = []
+	dfs(getPool(n))
+	
+	print(count[0], " calls to dfs")
+	return result[0]
+	
+def grayCode3(n):
+	def getPool(n):
+		pool = set()
+		for i in range(int(math.pow(2, n))):
+			pool.add(i)
+		
+		return pool
+	
+	def differsByOneBit(a, b):
+		MASK = 1
+		seenDiff = False
+		
+		while a or b:
+			if a & MASK != b & MASK:
+				if seenDiff:
+					return False
+				seenDiff = True
+			a >>= 1
+			b >>= 1
+		
+		return seenDiff
+	
+	def isLegalMove(item, cur):
+		if not cur:
+			return True
+		
+		return differsByOneBit(item, cur[-1])
+	
+	def executeMove(item, pool):
+		cur.append(item)
+		pool.remove(item)
+		
+		dfs(pool)
+		
+		cur.pop()
+		pool.add(item)
+		
+	def flipIthBit(num, i):
+		MASK = 1 << i
+		
+		# bit is 1, so flip to 0
+		if num & MASK:
+			return num & ~MASK
+		else:
+			# flip bit from 1 to 0
+			return num | MASK
+		
+	
+	def dfs(pool):
+		count[0] += 1
+		# solution already found
+		if result[0]:
+			return
+		# solution just found
+		if not pool:
+			result[0] = copy.deepcopy(cur)
+			return
+		
+		
+		if len(pool) < n or not cur:
+			for candidate in pool:
+				if isLegalMove(candidate, cur):
+					executeMove(candidate, pool)
+					
+		else:
+			for i in range(n):
+				candidate = flipIthBit(cur[-1], i)
+				if candidate in pool:
+					executeMove(candidate, pool)
+		
+	count = [0]
+	result = [None]
+	cur = []
+	dfs(getPool(n))
+	
+	print(count[0], " calls to dfs")			
+	return result[0]
+
+"""
+no pool implementation
+"""
+def grayCode4(n):
+	def executeMove(item):
+		cur.append(item)
+		dfs()
+		cur.pop()
+		
+	def flipIthBit(num, i):
+		MASK = 1 << i
+		
+		# bit is 1, so flip to 0
+		if num & MASK:
+			return num & ~MASK
+		else:
+			# flip bit from 1 to 0
+			return num | MASK
+		
+	
+	def dfs():
+		count[0] += 1
+		# solution already found
+		if result[0]:
+			return
+			
+		# solution just found
+		if len(cur) == math.pow(2, n):
+			result[0] = copy.deepcopy(cur)
+			return
+		
+		for i in range(n):
+			candidate = None
+			if cur:
+				candidate = flipIthBit(cur[-1], i)
+			else:
+				candidate = flipIthBit(0, i)
+			
+			# can optimize here with a set, ordered dict can be used to keep order
+			if candidate not in cur:
+				executeMove(candidate)
+		
+	count = [0]
+	result = [None]
+	cur = []
+	dfs()
+	
+	print(count[0], " calls to dfs")			
+	return result[0]
+	
+def grayCode5(num_bits):
+	if num_bits == 0:
+		return [0]
+	
+	gray_code_num_bits_minus_1 = grayCode5(num_bits - 1)
+	
+	leading_bit_one = 1 << (num_bits - 1)
+	
+	return gray_code_num_bits_minus_1 + [
+		leading_bit_one | i for i in reversed(gray_code_num_bits_minus_1)
+	]
+
+def grayCodeTest():
+	clear()
+	# print(grayCode(5))
+	clear()
+	print(grayCode2(5))
+	clear()
+	print(grayCode3(5))
+	clear()
+	print(grayCode4(5))
+	clear()
+	print(grayCode5(5))
+	
+grayCodeTest()
