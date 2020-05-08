@@ -735,5 +735,81 @@ def bbbTest():
 bbbTest()
 
 """
-16.12
+16.12 longest nondecreasing subsequence
+
+input: array of numbers
+output: length of longest subsequence that is non decreasing
+
+simple:
+	for each element in A track the amount of items previous to it that are less than it
+	find the first previous element that is less than or equal to the current element, take it's value (Amount of elements less than or equal to it that occur previous to it) if none found: 0
+	at each element track max sequence of items nondecreasing (maxAmountLessAndPrev)
+	n^2 runtime
+	n memory 
+
+better:
+	track a list of items that are less than the current value that we have seen
+	whenever we see a new value, perform binary search to find where to put that item in the lessPrevList
+	all items previous to that location are the current subsequence
+	at each element track max sequence of items nondecreasing (maxAmountLessAndPrev)
+	
+	
+	nlogn runtime
+	n mem
+
 """
+
+def longestNondecreasingSubsequence(A):
+	if not A:
+		return 0
+	lessThan = [0] * len(A)
+	maxNondecreasingLength = 0
+	
+	for i in range(1, len(A)):
+		for j in range(i - 1, -1, -1):
+			if A[j] <= A[i]:
+				lessThan[i] = lessThan[j] + 1
+				break
+		maxNondecreasingLength = max(maxNondecreasingLength, lessThan[i])
+	
+	return maxNondecreasingLength + 1
+	
+def longestNondecreasingSubsequenceBinarySearch(A):
+	def binSearch(A, value, low, high):
+		while low <= high:
+			mid = int((low + high) / 2)
+			if A[mid] == value:
+				return (True, mid)
+			elif low == high:
+				return (False, low)
+			elif A[mid] > value:
+				high = mid - 1
+			else:
+				low = mid + 1
+		
+		print(low, high, A, value)
+		raise Exception("bin search failure state")
+
+	curLessThan = [None] * len(A)
+	curLessThan[0] = A[0]
+	ltIndex = 0
+	maxltIndex = 0
+	
+	for i in range(1,  len(A)):
+		item = A[i]
+		found, index = binSearch(curLessThan, item, 0, ltIndex)
+		index += 1
+		curLessThan[index] = item
+		ltIndex = index
+		print(found, index, item, curLessThan)
+	
+	return ltIndex + 1
+		
+	
+def longestNondecreasingSubsequenceTest():
+	A = [0, 6, 2, 1, 5]
+	clear()
+	print('expecting 3: ', longestNondecreasingSubsequence(A))
+	print('expecting 3: ', longestNondecreasingSubsequenceBinarySearch(A))
+	
+longestNondecreasingSubsequenceTest()
