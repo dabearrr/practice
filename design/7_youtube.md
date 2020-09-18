@@ -175,6 +175,87 @@
   * once encoding is done, uploader will be notified and emailed a link to the vid to view / share
 
 ## Metadata sharding
+* lots of video throughput
+* need to distribute our data in a way to optimize read / write operations
+* sharding based on user_id
+  * we can try sotring all of the data for a user on one server
+  * pass uid to hash functionb which maps user to db server which will store that users videos
+  * while querying for videos of a users, we can ask our hash function to find the server with that user's data
+    * read from there
+  * to search vids by title we need to query all servers, each server will return a set of vids
+  * a centralized server will aggregate and rank the results
+  * issues
+    * hot user for reads
+      * lot of queries with that users, performance bottleneck
+    * hot user for writes
+      * guy uploads a ton of vids
+      * maintaining a uniform distribution of growing user vids is tricky
+* sharding based on video_id
+  * hash function maps video_ids to a random server where we store that vids metadata
+  * to find videos for a user, we query all servers
+  * each server returns a set of vids
+  * central server aggreagates and ranks the results
+  * solves problem of popular users, shifts it to popular vids
+* improve performance with a cache to store hot vids
 
+## video deduplicaiton
+* considering a ton of users are uploading lots of vid data, we will have to deal with widespread video deduplication
+* duplicate videos often have different aspect ratios or encoding
+* might have overlays or borders or be excerpts from original longer video
+* proliferation of duplicate videos can impact:
+  * data storage
+    * wasting storage by storing dupes
+  * caching
+    * duplicate videos result in degraded cache efficiency by taking up cache space from unique videos
+  * network usage
+    * duplicate vids increase the amount of data sent over the network to in-network caching systems
+  * energy consumption
+    * higher storage, inefficient cache, and network usage can result in energy wastage
+* user impact
+  * duplicate search results, longer vid startup times, interrupt streaming
+* service wants to catch duplicates early
+* at upload time and not post processing
+* inline deduplication will save us a lot of resources in encoding, transfer, and storage
+* As soon as a user starts upload a vid, we can run video matching algorithms (block matching, phase correlation) to find duplicates
+* if we already have a copy of the vid being uploaded, we can stop the upload and use the existing copy or continue the upload and use the newly uploaded video if it is higher quality
+* if the newly uploaded vid is a subpart of an existing vid or vice versa, we can intelligently divide the video into smaller chunks so we only upload the missing parts
 
+## load balancing
+* use consistent hashing among cache servers
+  * help balance load between cache servers
+  * static hash-based scheme to map videos to hostnames
+    * can lead to uneven load on logical replicas due to video popularity
+    * if a video is popular, that logical replica will experience more traffic than other servers
+    * unveven load on logical replicas can translate to uneven load on physical servers
+    * to resolve this, we can redirect a client to a less busy server in the same cache location
+      * dynamic HTTP redirections
+        * drawbacks
+          * service tries to load balance locally, which leads to multiple redirections if the host that recieves the redirection cannot server the video
+          * each redirection requires a client to make another HTTP request
+          * leads to higher delays before playback
+          * inter tier (cross data center) redirections lead a client to a distant cache location becuase higher tier caches are only present at a few locations
+
+## cache
+* to serve globally distributed users, we need a massive scale video delivery system
+* our service should push its content closer to the user using a large number of geographically distributed video cache servers.
+* we can cache hot db rows
+* memcached
+* app servers hit cache before db
+* LRU
+* more intelligent cache?
+  * 80-20 rule
+    * store top 20% of daily read volume of videos and metadata
+
+## CDN
+* content delivery network
+* distributed servers that deliver web content to a user based in the geographic locations of the user, the origin of the web page and a content delivery system
+* service can move popular vids to CDNs
+  * CDNs replicate content in multiple places
+  * better chance of vids being closer to the user, with fewer hops
+* CDN machines make heavy use of caching and can mostly serve vids out of memory
+* less popular vids can be served by our servers in various data centers
+
+## fault tolerance
+* consistent hashing for distribution among database servers
+* help in replacing dead servers, distributing load
 

@@ -1,0 +1,18 @@
+"""
+EPI
+Chapter 19, Parallel computing
+3 6 8 9 + 20.9
+"""
+
+import collections
+import math
+import random
+import heapq
+import bisect 
+import operator
+import functools
+import copy
+import timeit
+
+def clear():
+	print("-----------------------")
